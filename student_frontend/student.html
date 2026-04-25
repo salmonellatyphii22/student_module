@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Student Module</title>
+
+<style>
+body {
+    font-family: Arial;
+    background: linear-gradient(135deg, #0f172a, #2563eb);
+    color: white;
+    margin: 0;
+}
+
+/* 🔥 TOP SECTION ONLY */
+.top-section {
+    display: flex;
+    justify-content: center;   /* center horizontally */
+    align-items: flex-start;   /* stay at top */
+
+    height: 45vh;   /* only top portion */
+}
+
+/* MAIN CONTAINER */
+.container {
+    width: 650px;   /* 🔥 increased width */
+    text-align: center;
+
+    margin-top: 60px;   /* 🔥 controlled top spacing */
+}
+
+/* TITLE */
+h1 {
+    font-size: 34px;   /* 🔥 bigger title */
+    margin-bottom: 25px;
+}
+
+/* MAIN BOX */
+.box {
+    background: rgba(255,255,255,0.08);
+    padding: 30px;   /* 🔥 more spacing */
+    border-radius: 14px;
+}
+
+/* INPUT FIELDS */
+input {
+    width: 90%;
+    padding: 12px;
+    margin: 10px 0;
+    border-radius: 6px;
+    border: none;
+}
+
+/* BUTTONS */
+button {
+    margin: 10px;
+    padding: 14px 24px;   /* 🔥 bigger buttons */
+    border: none;
+    border-radius: 8px;
+    background: #2563eb;
+    color: white;
+    cursor: pointer;
+    font-size: 16px;   /* 🔥 bigger text */
+}
+
+button:hover {
+    background: #1d4ed8;
+}
+
+/* SECTIONS */
+.section {
+    display: none;
+    margin-top: 20px;
+}
+
+/* BACK BUTTON */
+.back-btn {
+    margin-top: 25px;
+    padding: 12px 22px;
+    font-size: 15px;
+    background: #1e293b;
+}
+
+/* 🔥 BOTTOM SECTION (FUTURE AREA) */
+.bottom-section {
+    height: 55vh;
+}
+
+input[type="date"] {
+    width: 90%;
+    padding: 12px;
+    margin: 10px 0;
+    border-radius: 6px;
+    border: none;
+    background: #e5e7eb;   /* same as other inputs */
+    color: #000;
+}
+
+/* LIST CONTAINER */
+#list {
+    margin-top: 20px;
+}
+
+/* EACH STUDENT CARD */
+.student-card {
+    background: rgba(255,255,255,0.08);
+    padding: 15px 20px;
+    margin: 15px 0;
+    border-radius: 10px;
+
+    text-align: left;   /* 🔥 important fix */
+    line-height: 1.6;
+
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+/* TEXT SPACING */
+.student-card p {
+    margin: 4px 0;
+}
+
+</style>
+
+</head>
+<body>
+
+<!-- 🔥 TOP SECTION -->
+<div class="top-section">
+    <div class="container">
+
+        <h1>Student Module</h1>
+
+        <div class="box">
+            <button onclick="show('create')">Create</button>
+            <button onclick="show('view')">View</button>
+            <button onclick="show('update')">Update</button>
+            <button onclick="show('delete')">Delete</button>
+        </div>
+
+        <!-- CREATE -->
+        <div id="create" class="section">
+            <input id="sid" placeholder="Student ID">
+
+            <input id="fname" placeholder="First Name">
+            <input id="lname" placeholder="Last Name">
+
+            <input id="email" placeholder="Email">
+            <input id="phone" placeholder="Phone Number">
+
+            <input id="address" placeholder="Address">
+
+            <input id="dob" type="date">
+
+            <input id="year" placeholder="Enrollment Year">
+            <input id="dept" placeholder="Department ID">
+
+            <button onclick="addStudent()">Add</button>
+        </div>
+
+        <!-- VIEW -->
+        <div id="view" class="section">
+            <div id="list"></div>
+        </div>
+
+        <!-- UPDATE -->
+        <div id="update" class="section">
+            <input id="uid" placeholder="Student ID">
+
+            <input id="ufname" placeholder="New First Name">
+            <input id="ulname" placeholder="New Last Name">
+
+            <input id="uemail" placeholder="New Email">
+            <input id="uphone" placeholder="New Phone Number">
+
+            <input id="uaddress" placeholder="New Address">
+
+            <input id="udob" type="date">
+
+            <input id="uyear" placeholder="New Enrollment Year">
+            <input id="udept" placeholder="New Department ID">
+
+            <button onclick="updateStudent()">Update</button>
+        </div>
+
+        <!-- DELETE -->
+        <div id="delete" class="section">
+            <input id="did" placeholder="ID">
+            <button onclick="deleteStudent()">Delete</button>
+        </div>
+
+        <!-- BACK BUTTON -->
+        <button class="back-btn" onclick="goBack()">Back to Dashboard</button>
+
+    </div>
+</div>
+
+<!-- 🔥 BOTTOM SECTION (FUTURE CONTENT AREA) -->
+<div class="bottom-section">
+    <!-- You can add table / charts / data here later -->
+</div>
+
+<script>
+function show(id) {
+    document.querySelectorAll('.section').forEach(s => s.style.display = "none");
+    document.getElementById(id).style.display = "block";
+
+    if (id === "view") loadStudents();
+}
+
+function getData() {
+    return JSON.parse(localStorage.getItem("students")) || [];
+}
+
+function saveData(data) {
+    localStorage.setItem("students", JSON.stringify(data));
+}
+
+function addStudent() {
+    let data = getData();
+
+    const id = document.getElementById("sid").value;
+
+    // Primary Key check
+    if (data.some(s => s.id == id)) {
+        alert("Student ID already exists!");
+        return;
+    }
+
+    data.push({
+        id: id,
+        firstName: document.getElementById("fname").value,
+        lastName: document.getElementById("lname").value,
+        email: document.getElementById("email").value,
+        phone: document.getElementById("phone").value,
+        address: document.getElementById("address").value,
+        dob: document.getElementById("dob").value,
+        enrollmentYear: document.getElementById("year").value,
+        deptId: document.getElementById("dept").value
+    });
+
+    saveData(data);
+    alert("Student Added");
+}
+
+function loadStudents() {
+    let data = getData();
+
+    document.getElementById("list").innerHTML = data.map(s =>
+        `<div class="student-card">
+            <p><b>ID:</b> ${s.id}</p>
+            <p><b>Name:</b> ${s.firstName || ""} ${s.lastName || ""}</p>
+            <p><b>Email:</b> ${s.email || ""}</p>
+            <p><b>Phone:</b> ${s.phone || ""}</p>
+            <p><b>DOB:</b> ${s.dob || ""}</p>
+            <p><b>Year:</b> ${s.enrollmentYear || ""}</p>
+            <p><b>Dept ID:</b> ${s.deptId || ""}</p>
+        </div>`
+    ).join("");
+}
+
+function updateStudent() {
+    let data = getData();
+
+    const id = document.getElementById("uid").value;
+
+    data = data.map(s =>
+        s.id == id
+        ? {
+            ...s,
+            firstName: document.getElementById("ufname").value || s.firstName,
+            lastName: document.getElementById("ulname").value || s.lastName,
+            email: document.getElementById("uemail").value || s.email,
+            phone: document.getElementById("uphone").value || s.phone,
+            address: document.getElementById("uaddress").value || s.address,
+            dob: document.getElementById("udob").value || s.dob,
+            enrollmentYear: document.getElementById("uyear").value || s.enrollmentYear,
+            deptId: document.getElementById("udept").value || s.deptId
+        }
+        : s
+    );
+
+    saveData(data);
+    alert("Student Updated");
+}
+
+function deleteStudent() {
+    let data = getData().filter(s => 
+        s.id != document.getElementById("did").value
+    );
+
+    saveData(data);
+    alert("Deleted");
+}
+
+function goBack() {
+    window.location.href = "index.html";
+}
+</script>
+
+</body>
+</html>

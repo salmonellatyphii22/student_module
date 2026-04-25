@@ -1,0 +1,301 @@
+body {
+    margin: 0;
+    font-family: Arial;
+    background: linear-gradient(135deg, #0f172a, #2563eb); /* DEFAULT BLUE THEME */
+    color: #ffffff;
+    transition: background 0.5s ease, color 0.5s ease;
+}
+
+/* Layout */
+.main {
+    display: flex;
+    min-height: 100vh; /* FIXED (important for background continuity) */
+}
+
+/* Menu Button */
+.menu-btn {
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    font-size: 26px;
+    cursor: pointer;
+    z-index: 1000;
+    background: rgba(255,255,255,0.1);
+    padding: 8px 12px;
+    border-radius: 6px;
+    backdrop-filter: blur(5px);
+}
+
+/* Sidebar */
+.sidebar {
+    width: 240px;
+    background: rgba(15, 23, 42, 0.95);
+    padding: 20px;
+    position: fixed;
+    height: 100%;
+    left: -260px;
+    top: 0;
+    transition: 0.3s ease;
+}
+
+/* Sidebar active */
+.sidebar.active {
+    left: 0;
+}
+
+.sidebar h2 {
+    text-align: center;
+    color: #60a5fa;
+}
+
+.sidebar ul {
+    list-style: none;
+    padding: 0;
+}
+
+.sidebar li {
+    padding: 12px;
+    margin: 8px 0;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+/* Hover */
+.sidebar li:hover {
+    background: linear-gradient(45deg, #3b82f6, #60a5fa);
+    transform: translateX(5px);
+}
+
+/* Active */
+.sidebar li.active {
+    background: linear-gradient(45deg, #2563eb, #60a5fa);
+}
+
+/* Content */
+.content {
+    flex: 1;
+    padding: 40px;
+    margin-left: 0;
+    transition: 0.3s ease;
+    animation: fadeIn 0.5s ease;
+
+    /* 🔥 IMPORTANT FIX FOR COLOR MISMATCH */
+    background: transparent;
+}
+
+/* Shift content */
+.content.shift {
+    margin-left: 240px;
+}
+
+/* Hero */
+.hero {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+/* Banner */
+.banner img {
+    width: 100%;
+    height: 250px;
+    object-fit: cover;
+    border-radius: 12px;
+    margin: 20px 0;
+}
+
+/* Stats */
+.stats {
+    display: flex;
+    gap: 15px;
+    justify-content: space-between;
+    margin: 20px 0;
+}
+
+/* Features (FIXED) */
+.features {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    margin-top: 20px;
+
+    /* 🔥 KEY FIX */
+    background: transparent !important;
+}
+
+/* Quote */
+.quote {
+    margin-top: 30px;
+    text-align: center;
+    font-style: italic;
+    font-size: 18px;
+    opacity: 0.85;
+}
+
+/* Cards */
+.card {
+    background: rgba(255, 255, 255, 0.08);
+    padding: 20px;
+    margin: 10px;
+    border-radius: 12px;
+    transition: 0.3s;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* Hover */
+.card:hover {
+    transform: translateY(-5px);
+    background: linear-gradient(45deg, #3b82f6, #60a5fa);
+}
+
+/* Inputs */
+input {
+    padding: 10px;
+    margin: 10px;
+    border-radius: 6px;
+    border: none;
+    outline: none;
+}
+
+/* Buttons */
+button {
+    padding: 10px 20px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    background: linear-gradient(45deg, #2563eb, #60a5fa);
+    color: white;
+    transition: 0.3s;
+}
+
+button:hover {
+    transform: scale(1.05);
+}
+
+/* Animation */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px);}
+    to { opacity: 1; transform: translateY(0);}
+}
+
+/* Theme Toggle */
+.theme-toggle {
+    position: fixed;
+    top: 15px;
+    right: 20px;
+    font-size: 22px;
+    cursor: pointer;
+    background: rgba(255,255,255,0.1);
+    padding: 8px 12px;
+    border-radius: 50%;
+    backdrop-filter: blur(5px);
+    transition: 0.3s;
+}
+
+.theme-toggle:hover {
+    transform: scale(1.1);
+}
+
+/* ================= DARK MODE ================= */
+
+.dark-mode {
+    background: linear-gradient(135deg, #020617, #1e3a8a);
+    color: #e2e8f0;
+}
+
+/* Sidebar darker */
+.dark-mode .sidebar {
+    background: #020617;
+}
+
+/* Cards darker */
+.dark-mode .card {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+}
+
+/* Menu button */
+.dark-mode .menu-btn {
+    background: rgba(255,255,255,0.05);
+}
+
+.card, .sidebar, .menu-btn {
+    transition: all 0.4s ease;
+}
+
+/* ================= CENTERED FORM PAGES ================= */
+
+/* Wrapper for form pages */
+.center-wrapper {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: calc(100vh - 40px);
+}
+
+/* Container (card-like box) */
+.container {
+    width: 380px;
+    text-align: center;
+}
+
+/* Form box (matches your theme) */
+.form-box {
+    background: rgba(255, 255, 255, 0.08);
+    padding: 25px;
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* Inputs (override existing slightly) */
+.form-box input {
+    width: 85%;
+    padding: 10px;
+    margin: 8px 0;
+    border-radius: 6px;
+    border: none;
+}
+
+/* Buttons (fix long width issue) */
+.form-box button {
+    width: auto;
+    padding: 10px 18px;
+    margin-top: 12px;
+}
+
+/* Back button */
+.back-btn {
+    margin-top: 15px;
+    padding: 8px 16px;
+    background: rgba(255,255,255,0.1);
+}
+
+/* View list styling */
+#list {
+    text-align: left;
+}
+
+/* Optional: student item card */
+.student-item {
+    background: rgba(255,255,255,0.05);
+    padding: 10px;
+    margin: 8px 0;
+    border-radius: 6px;
+}
+
+/* Sections hidden by default */
+.section {
+    margin-top: 15px;
+    background: rgba(255,255,255,0.05);
+    padding: 15px;
+    border-radius: 8px;
+}
+
+/* Better spacing */
+.section input {
+    width: 85%;
+    margin: 6px 0;
+}

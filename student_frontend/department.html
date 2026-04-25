@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Department Module</title>
+
+<style>
+body {
+    font-family: Arial;
+    background: linear-gradient(135deg, #0f172a, #2563eb);
+    color: white;
+    margin: 0;
+}
+
+/* 🔥 TOP SECTION */
+.top-section {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    height: 45vh;
+}
+
+/* CONTAINER */
+.container {
+    width: 650px;
+    text-align: center;
+    margin-top: 60px;
+}
+
+/* TITLE */
+h1 {
+    font-size: 34px;
+    margin-bottom: 25px;
+}
+
+/* BOX */
+.box {
+    background: rgba(255,255,255,0.08);
+    padding: 30px;
+    border-radius: 14px;
+}
+
+/* INPUT */
+input {
+    width: 90%;
+    padding: 12px;
+    margin: 10px 0;
+    border-radius: 6px;
+    border: none;
+}
+
+/* BUTTON */
+button {
+    margin: 10px;
+    padding: 14px 24px;
+    border: none;
+    border-radius: 8px;
+    background: #2563eb;
+    color: white;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:hover {
+    background: #1d4ed8;
+}
+
+/* SECTIONS */
+.section {
+    display: none;
+    margin-top: 20px;
+    background: rgba(255,255,255,0.05);
+    padding: 15px;
+    border-radius: 8px;
+}
+
+/* ITEM */
+.item {
+    background: rgba(255,255,255,0.08);
+    padding: 10px;
+    margin: 8px 0;
+    border-radius: 6px;
+}
+
+/* BACK BUTTON */
+.back-btn {
+    margin-top: 25px;
+    padding: 12px 22px;
+    font-size: 15px;
+    background: #1e293b;
+}
+
+/* 🔥 BOTTOM SPACE */
+.bottom-section {
+    height: 55vh;
+}
+</style>
+
+</head>
+
+<body>
+
+<!-- 🔥 TOP SECTION -->
+<div class="top-section">
+    <div class="container">
+
+        <h1>Department Module</h1>
+
+        <div class="box">
+            <button onclick="show('create')">Create</button>
+            <button onclick="show('view')">View</button>
+            <button onclick="show('update')">Update</button>
+            <button onclick="show('delete')">Delete</button>
+        </div>
+
+        <!-- CREATE -->
+        <div id="create" class="section">
+            <input id="deptId" placeholder="Department ID">
+            <input id="deptName" placeholder="Department Name">
+            <input id="deptHead" placeholder="Head of Department">
+            <button onclick="addDept()">Add Department</button>
+        </div>
+
+        <!-- VIEW -->
+        <div id="view" class="section">
+            <div id="list"></div>
+        </div>
+
+        <!-- UPDATE -->
+        <div id="update" class="section">
+            <input id="uid" placeholder="Department ID">
+            <input id="uname" placeholder="New Department Name">
+            <input id="uhead" placeholder="New Head">
+            <button onclick="updateDept()">Update</button>
+        </div>
+
+        <!-- DELETE -->
+        <div id="delete" class="section">
+            <input id="did" placeholder="Department ID">
+            <button onclick="deleteDept()">Delete</button>
+        </div>
+
+        <button class="back-btn" onclick="goBack()">Back to Dashboard</button>
+
+    </div>
+</div>
+
+<!-- 🔥 BOTTOM SECTION -->
+<div class="bottom-section"></div>
+
+<script>
+// SWITCH
+function show(id) {
+    document.querySelectorAll('.section').forEach(s => s.style.display = "none");
+    document.getElementById(id).style.display = "block";
+
+    if (id === "view") loadDept();
+}
+
+// DATA
+function getData() {
+    return JSON.parse(localStorage.getItem("departments")) || [];
+}
+
+function saveData(data) {
+    localStorage.setItem("departments", JSON.stringify(data));
+}
+
+// CREATE
+function addDept() {
+    let data = getData();
+
+    const id = document.getElementById("deptId").value;
+
+    if (data.some(d => d.id == id)) {
+        alert("Department ID already exists!");
+        return;
+    }
+
+    data.push({
+        id: id,
+        name: document.getElementById("deptName").value,
+        head: document.getElementById("deptHead").value
+    });
+
+    saveData(data);
+    alert("Department Added");
+}
+
+// VIEW
+function loadDept() {
+    let data = getData();
+
+    document.getElementById("list").innerHTML = data.map(d =>
+        `<div class="item">
+            <b>ID:</b> ${d.id}<br>
+            <b>Name:</b> ${d.name}<br>
+            <b>Head:</b> ${d.head}
+        </div>`
+    ).join("");
+}
+
+// UPDATE
+function updateDept() {
+    let data = getData();
+
+    data = data.map(d =>
+        d.id == document.getElementById("uid").value
+        ? {
+            ...d,
+            name: document.getElementById("uname").value,
+            head: document.getElementById("uhead").value
+        }
+        : d
+    );
+
+    saveData(data);
+    alert("Updated");
+}
+
+// DELETE
+function deleteDept() {
+    let data = getData().filter(d =>
+        d.id != document.getElementById("did").value
+    );
+
+    saveData(data);
+    alert("Deleted");
+}
+
+// BACK
+function goBack() {
+    window.location.href = "index.html";
+}
+</script>
+
+</body>
+</html>

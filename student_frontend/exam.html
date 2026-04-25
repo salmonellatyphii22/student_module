@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Exams Module</title>
+
+<style>
+body {
+    font-family: Arial;
+    background: linear-gradient(135deg, #0f172a, #2563eb);
+    color: white;
+    margin: 0;
+}
+
+/* TOP SECTION */
+.top-section {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    height: 45vh;
+}
+
+/* CONTAINER */
+.container {
+    width: 650px;
+    text-align: center;
+    margin-top: 60px;
+}
+
+/* TITLE */
+h1 {
+    font-size: 34px;
+    margin-bottom: 25px;
+}
+
+/* BUTTON BOX */
+.box {
+    background: rgba(255,255,255,0.08);
+    padding: 30px;
+    border-radius: 14px;
+}
+
+/* INPUT + SELECT */
+input, select {
+    width: 90%;
+    padding: 12px;
+    margin: 10px 0;
+    border-radius: 6px;
+    border: none;
+    box-sizing: border-box;
+    background: #e5e7eb;
+    color: black;
+}
+
+/* BUTTON */
+button {
+    margin: 10px;
+    padding: 14px 24px;
+    border: none;
+    border-radius: 8px;
+    background: #2563eb;
+    color: white;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:hover {
+    background: #1d4ed8;
+}
+
+/* SECTION */
+.section {
+    display: none;
+    margin-top: 20px;
+    background: rgba(255,255,255,0.05);
+    padding: 20px;
+    border-radius: 10px;
+}
+
+/* ITEM (VIEW CARD) */
+.item {
+    background: rgba(255,255,255,0.08);
+    padding: 15px;
+    margin: 15px 0;
+    border-radius: 8px;
+    text-align: left;
+}
+
+/* BACK BUTTON */
+.back-btn {
+    margin-top: 25px;
+    background: #1e293b;
+}
+
+/* BOTTOM */
+.bottom-section {
+    height: 55vh;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="top-section">
+<div class="container">
+
+<h1>Exams Module</h1>
+
+<!-- ACTION BUTTONS -->
+<div class="box">
+    <button onclick="show('create')">Create</button>
+    <button onclick="show('view')">View</button>
+    <button onclick="show('update')">Update</button>
+    <button onclick="show('delete')">Delete</button>
+</div>
+
+<!-- CREATE -->
+<div id="create" class="section">
+    <input id="examId" placeholder="Exam ID">
+
+    <select id="examType">
+        <option value="">Select Exam Type</option>
+        <option>Midterm</option>
+        <option>Final</option>
+        <option>Practical</option>
+    </select>
+
+    <input type="date" id="examDate">
+    <input id="marks" placeholder="Total Marks">
+    <input id="facultyId" placeholder="Faculty ID">
+
+    <button onclick="addExam()">Add Exam</button>
+</div>
+
+<!-- VIEW -->
+<div id="view" class="section">
+    <div id="list"></div>
+</div>
+
+<!-- UPDATE -->
+<div id="update" class="section">
+    <input id="uid" placeholder="Exam ID">
+
+    <select id="utype">
+        <option value="">New Exam Type</option>
+        <option>Midterm</option>
+        <option>Final</option>
+        <option>Practical</option>
+    </select>
+
+    <input type="date" id="udate">
+    <input id="umarks" placeholder="New Marks">
+
+    <button onclick="updateExam()">Update</button>
+</div>
+
+<!-- DELETE -->
+<div id="delete" class="section">
+    <input id="did" placeholder="Exam ID">
+    <button onclick="deleteExam()">Delete</button>
+</div>
+
+<button class="back-btn" onclick="goBack()">Back to Dashboard</button>
+
+</div>
+</div>
+
+<div class="bottom-section"></div>
+
+<script>
+
+// SWITCH
+function show(id) {
+    document.querySelectorAll('.section').forEach(s => s.style.display = "none");
+    document.getElementById(id).style.display = "block";
+
+    if (id === "view") loadExams();
+}
+
+// STORAGE
+function getData() {
+    return JSON.parse(localStorage.getItem("exams")) || [];
+}
+
+function saveData(data) {
+    localStorage.setItem("exams", JSON.stringify(data));
+}
+
+// CREATE
+function addExam() {
+    let data = getData();
+
+    const id = document.getElementById("examId").value;
+
+    if (data.some(e => e.id == id)) {
+        alert("Exam ID already exists!");
+        return;
+    }
+
+    data.push({
+        id: id,
+        type: document.getElementById("examType").value,
+        date: document.getElementById("examDate").value,
+        marks: document.getElementById("marks").value,
+        faculty: document.getElementById("facultyId").value
+    });
+
+    saveData(data);
+    alert("Exam Added");
+}
+
+// VIEW
+function loadExams() {
+    let data = getData();
+
+    document.getElementById("list").innerHTML = data.map(e => `
+        <div class="item">
+            <b>ID:</b> ${e.id}<br>
+            <b>Type:</b> ${e.type}<br>
+            <b>Date:</b> ${e.date}<br>
+            <b>Marks:</b> ${e.marks}<br>
+            <b>Faculty ID:</b> ${e.faculty}
+        </div>
+    `).join("");
+}
+
+// UPDATE
+function updateExam() {
+    let data = getData();
+
+    data = data.map(e =>
+        e.id == document.getElementById("uid").value
+        ? {
+            ...e,
+            type: document.getElementById("utype").value,
+            date: document.getElementById("udate").value,
+            marks: document.getElementById("umarks").value
+        }
+        : e
+    );
+
+    saveData(data);
+    alert("Updated");
+}
+
+// DELETE
+function deleteExam() {
+    let data = getData().filter(e =>
+        e.id != document.getElementById("did").value
+    );
+
+    saveData(data);
+    alert("Deleted");
+}
+
+// BACK
+function goBack() {
+    window.location.href = "index.html";
+}
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Courses Module</title>
+
+<style>
+body {
+    font-family: Arial;
+    background: linear-gradient(135deg, #0f172a, #2563eb);
+    color: white;
+    margin: 0;
+}
+
+/* 🔥 TOP SECTION */
+.top-section {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    height: 45vh;
+}
+
+/* CONTAINER */
+.container {
+    width: 650px;
+    text-align: center;
+    margin-top: 60px;
+}
+
+/* TITLE */
+h1 {
+    font-size: 34px;
+    margin-bottom: 25px;
+}
+
+/* BOX */
+.box {
+    background: rgba(255,255,255,0.08);
+    padding: 30px;
+    border-radius: 14px;
+}
+
+/* 🔥 INPUT + SELECT (FIXED) */
+input, select {
+    width: 90%;
+    padding: 12px;
+    margin: 10px 0;
+
+    border-radius: 6px;
+    border: none;
+
+    box-sizing: border-box;   /* ✅ SAME SIZE */
+    font-size: 14px;
+    font-family: Arial;
+
+    background: #e5e7eb;      /* ✅ same color */
+    color: #000;
+}
+
+/* 🔥 FIX SELECT HEIGHT + STYLE */
+select {
+    width: 90%;
+    padding: 12px;
+    margin: 10px 0;
+    border-radius: 6px;
+    border: none;
+
+    box-sizing: border-box;
+    font-size: 14px;
+    font-family: Arial;
+
+    background: #e5e7eb;
+    color: #000;
+
+    height: 44px;
+    cursor: pointer;
+}
+
+/* BUTTON */
+button {
+    margin: 10px;
+    padding: 14px 24px;
+    border: none;
+    border-radius: 8px;
+    background: #2563eb;
+    color: white;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:hover {
+    background: #1d4ed8;
+}
+
+/* SECTIONS */
+.section {
+    display: none;
+    margin-top: 20px;
+    background: rgba(255,255,255,0.05);
+    padding: 15px;
+    border-radius: 8px;
+}
+
+/* ITEM */
+.item {
+    background: rgba(255,255,255,0.08);
+    padding: 12px;
+    margin: 12px 0;          /* 🔥 better spacing */
+    border-radius: 6px;
+    text-align: left;        /* 🔥 FIX alignment */
+}
+
+/* BACK BUTTON */
+.back-btn {
+    margin-top: 25px;
+    padding: 12px 22px;
+    font-size: 15px;
+    background: #1e293b;
+}
+
+/* 🔥 BOTTOM SECTION */
+.bottom-section {
+    height: 55vh;
+}
+</style>
+
+</head>
+
+<body>
+
+<!-- 🔥 TOP SECTION -->
+<div class="top-section">
+    <div class="container">
+
+        <h1>Courses Module</h1>
+
+        <div class="box">
+            <button onclick="show('create')">Create</button>
+            <button onclick="show('view')">View</button>
+            <button onclick="show('update')">Update</button>
+            <button onclick="show('delete')">Delete</button>
+        </div>
+
+        <!-- CREATE -->
+        <div id="create" class="section">
+            <input id="courseId" placeholder="Course ID">
+
+            <input id="courseName" placeholder="Course Name">
+
+            <input id="credits" placeholder="Credits (e.g. 3)">
+            <input id="semester" placeholder="Semester (e.g. 1)">
+
+            <!-- Course Type Dropdown -->
+            <select id="courseType">
+                <option value="">Select Course Type</option>
+                <option>Core</option>
+                <option>Elective</option>
+            </select>
+
+            <input id="facultyId" placeholder="Faculty ID">
+
+            <button onclick="addCourse()">Add Course</button>
+        </div>
+
+        <!-- VIEW -->
+        <div id="view" class="section">
+            <div id="list"></div>
+        </div>
+
+        <!-- UPDATE -->
+        <div id="update" class="section">
+            <input id="uid" placeholder="Course ID">
+
+            <input id="uname" placeholder="New Course Name">
+            <input id="ucredits" placeholder="New Credits">
+
+            <input id="usemester" placeholder="New Semester">
+
+            <select id="utype">
+                <option value="">Select Type</option>
+                <option>Core</option>
+                <option>Elective</option>
+            </select>
+
+            <input id="ufaculty" placeholder="New Faculty ID">
+
+            <button onclick="updateCourse()">Update</button>
+        </div>
+
+        <!-- DELETE -->
+        <div id="delete" class="section">
+            <input id="did" placeholder="Course ID">
+            <button onclick="deleteCourse()">Delete</button>
+        </div>
+
+        <button class="back-btn" onclick="goBack()">Back to Dashboard</button>
+
+    </div>
+</div>
+
+<!-- 🔥 BOTTOM SECTION -->
+<div class="bottom-section"></div>
+
+<script>
+// SWITCH
+function show(id) {
+    document.querySelectorAll('.section').forEach(s => s.style.display = "none");
+    document.getElementById(id).style.display = "block";
+
+    if (id === "view") loadCourses();
+}
+
+// DATA
+function getData() {
+    return JSON.parse(localStorage.getItem("courses")) || [];
+}
+
+function saveData(data) {
+    localStorage.setItem("courses", JSON.stringify(data));
+}
+
+// CREATE
+function addCourse() {
+    let data = getData();
+
+    const id = document.getElementById("courseId").value;
+
+    if (data.some(c => c.id == id)) {
+        alert("Course ID already exists!");
+        return;
+    }
+
+    const credits = parseInt(document.getElementById("credits").value);
+
+    // 🔥 DB constraint simulation
+    if (credits <= 0) {
+        alert("Credits must be greater than 0");
+        return;
+    }
+
+    data.push({
+        id: id,
+        name: document.getElementById("courseName").value,
+        credits: credits,
+        semester: document.getElementById("semester").value,
+        type: document.getElementById("courseType").value,
+        facultyId: document.getElementById("facultyId").value
+    });
+
+    saveData(data);
+    alert("Course Added");
+}
+
+// VIEW
+function loadCourses() {
+    let data = getData();
+
+    document.getElementById("list").innerHTML = data.map(c =>
+        `<div class="item" style="text-align:left;">
+            <p><b>ID:</b> ${c.id}</p>
+            <p><b>Name:</b> ${c.name}</p>
+            <p><b>Credits:</b> ${c.credits}</p>
+            <p><b>Semester:</b> ${c.semester}</p>
+            <p><b>Type:</b> ${c.type}</p>
+            <p><b>Faculty ID:</b> ${c.facultyId}</p>
+        </div>`
+    ).join("");
+}
+
+// UPDATE
+function updateCourse() {
+    let data = getData();
+
+    data = data.map(c =>
+        c.id == document.getElementById("uid").value
+        ? {
+            ...c,
+            name: document.getElementById("uname").value || c.name,
+            credits: document.getElementById("ucredits").value || c.credits,
+            semester: document.getElementById("usemester").value || c.semester,
+            type: document.getElementById("utype").value || c.type,
+            facultyId: document.getElementById("ufaculty").value || c.facultyId
+        }
+        : c
+    );
+
+    saveData(data);
+    alert("Updated");
+}
+
+// DELETE
+function deleteCourse() {
+    let data = getData().filter(c =>
+        c.id != document.getElementById("did").value
+    );
+
+    saveData(data);
+    alert("Deleted");
+}
+
+// BACK
+function goBack() {
+    window.location.href = "index.html";
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Student Academy</title>
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+</head>
+
+<body>
+
+<!-- Sidebar Toggle Button -->
+<div class="menu-btn" onclick="toggleSidebar()">
+    ☰
+</div>
+
+<!-- 🌙 Theme Toggle Button -->
+<div class="theme-toggle" onclick="toggleTheme()">
+    🌙
+</div>
+
+<div class="main">
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <h2 onclick="loadHome()">🎓 Academy</h2>
+
+        <ul>
+
+            <li class="active" onclick="setActive(this); loadHome()">
+                <i class="fa fa-home"></i> Home
+            </li>
+
+            <li onclick="setActive(this); goToPage('student.html')">
+                <i class="fa fa-user"></i> Students
+            </li>
+
+            <li onclick="setActive(this); goToPage('department.html')">
+                <i class="fa fa-building"></i> Department
+            </li>
+
+            <li onclick="setActive(this); goToPage('faculty.html')">
+                <i class="fa fa-chalkboard-teacher"></i> Faculty
+            </li>
+
+            <li onclick="setActive(this); goToPage('courses.html')">
+                <i class="fa fa-book"></i> Courses
+            </li>
+
+            <!-- <li onclick="setActive(this); loadModule('enrollment')">
+                <i class="fa fa-clipboard"></i> Enrollment
+            </li> -->
+
+            <hr>
+
+            <li onclick="setActive(this); goToPage('exam.html')">
+                <i class="fa fa-calendar"></i> Exams
+            </li>
+
+            <li onclick="setActive(this); loadPage('report')">
+                <i class="fa fa-chart-line"></i> Reports
+            </li>
+
+        </ul>
+    </div>
+
+    <!-- Content -->
+    <div class="content" id="content">
+        <h1>Welcome </h1>
+        <p>Manage your academic system efficiently</p>
+    </div>
+
+</div>
+
+<script src="js/main.js"></script>
+
+</body>
+</html>
