@@ -158,6 +158,13 @@ input[type="date"] {
 
         <!-- VIEW -->
         <div id="view" class="section">
+            <!-- 🔍 SEARCH BAR -->
+            <input 
+             type="text" 
+             id="searchInput" 
+             placeholder="Search student..." 
+             onkeyup="searchStudents()"
+            >
             <div id="list"></div>
         </div>
 
@@ -293,6 +300,20 @@ function deleteStudent() {
 
 function goBack() {
     window.location.href = "index.html";
+}
+function searchStudents() {
+    let input = document.getElementById("searchInput").value.toLowerCase();
+    let cards = document.querySelectorAll(".student-card");
+
+    cards.forEach(card => {
+        let text = card.innerText.toLowerCase();
+
+        if (text.includes(input)) {
+            card.style.display = "";
+        } else {
+            card.style.display = "none";
+        }
+    });
 }
 </script>
 

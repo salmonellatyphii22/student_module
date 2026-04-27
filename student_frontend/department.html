@@ -122,6 +122,12 @@ button:hover {
 
         <!-- VIEW -->
         <div id="view" class="section">
+            <input 
+            type="text" 
+            id="searchInput" 
+            placeholder="Search department..." 
+            onkeyup="searchDepartment()"
+            >
             <div id="list"></div>
         </div>
 
@@ -230,6 +236,20 @@ function deleteDept() {
 // BACK
 function goBack() {
     window.location.href = "index.html";
+}
+function searchDepartment() {
+    let input = document.getElementById("searchInput").value.toLowerCase();
+    let cards = document.querySelectorAll(".department-card");
+
+    cards.forEach(card => {
+        let text = card.innerText.toLowerCase();
+
+        if (text.includes(input)) {
+            card.style.display = "";
+        } else {
+            card.style.display = "none";
+        }
+    });
 }
 </script>
 
