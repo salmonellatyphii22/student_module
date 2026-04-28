@@ -104,3 +104,79 @@ class MarksCreate(BaseModel):
     Subject_ID: int
     Internal: float
     External: float
+    
+class DepartmentBase(BaseModel):
+    Dept_Name: str
+    HOD_Name: Optional[str] = None
+    Location: Optional[str] = None
+
+
+class DepartmentCreate(DepartmentBase):
+    pass
+
+
+class DepartmentUpdate(BaseModel):
+    Dept_Name: Optional[str] = None
+    HOD_Name: Optional[str] = None
+    Location: Optional[str] = None
+
+
+class DepartmentResponse(DepartmentBase):
+    Dept_ID: int
+
+    class Config:
+        from_attributes = True
+        
+class FacultyBase(BaseModel):
+    Name: str
+    Email: str
+    Phone_no: Optional[str] = None
+    Designation: Optional[str] = None
+    Salary: Optional[float] = None
+    Dept_ID: int
+
+
+class FacultyCreate(FacultyBase):
+    pass
+
+
+class FacultyUpdate(BaseModel):
+    Name: Optional[str] = None
+    Email: Optional[str] = None
+    Phone_no: Optional[str] = None
+    Designation: Optional[str] = None
+    Salary: Optional[float] = None
+    Dept_ID: Optional[int] = None
+
+
+class FacultyResponse(FacultyBase):
+    Faculty_ID: int
+
+    class Config:
+        from_attributes = True
+        
+# ---------------- EXAM ----------------
+
+class ExamBase(BaseModel):
+    Exam_Type: str
+    Exam_Date: date
+    Total_Marks: int
+    Faculty_ID: int
+
+
+class ExamCreate(ExamBase):
+    pass
+
+
+class ExamUpdate(BaseModel):
+    Exam_Type: Optional[str] = None
+    Exam_Date: Optional[date] = None
+    Total_Marks: Optional[int] = None
+    Faculty_ID: Optional[int] = None
+
+
+class ExamResponse(ExamBase):
+    Exam_ID: int
+
+    class Config:
+        from_attributes = True
