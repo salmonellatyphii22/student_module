@@ -1,6 +1,9 @@
+from sqlite3 import IntegrityError
+
 from sqlalchemy.orm import Session
 import models, utils
 from fastapi import HTTPException
+from sqlalchemy import text
 
 # ---------------- CREATE STUDENT ----------------
 def create_student(db: Session, student):
@@ -298,11 +301,19 @@ def get_student_result(db: Session, student_id: int):
 # ---------------- FACULTY ----------------
 
 def create_faculty(db: Session, faculty):
-    db_faculty = models.Faculty(**faculty.dict())
-    db.add(db_faculty)
-    db.commit()
-    db.refresh(db_faculty)
-    return db_faculty
+    try:
+        db_faculty = models.Faculty(**faculty.dict())
+        db.add(db_faculty)
+        db.commit()
+        db.refresh(db_faculty)
+        return db_faculty
+
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=400,
+            detail="Email already exists"
+        )
 
 
 def get_faculties(db: Session):
@@ -423,3 +434,96 @@ def delete_exam(db: Session, exam_id: int):
         db.commit()
 
     return exam
+
+def get_student_result(db, student_id):
+    result = db.execute(text("""
+        SELECT c.Course_Name, ar.Marks_Obtained, ar.Grade, ar.Result_Status
+        FROM Academic_Report ar
+        JOIN Course c ON ar.Course_ID = c.Course_ID
+        WHERE ar.Student_ID = :student_id
+    """), {"student_id": student_id}).fetchall()
+
+    return [dict(row._mapping) for row in result]
+
+# ---------------- ACADEMIC REPORT ----------------
+def create_report(db, data):
+    db.execute(text("""
+        INSERT INTO Academic_Report
+        (Student_ID, Course_ID, Marks_Obtained, Grade, Result_Status)
+        VALUES (:Student_ID, :Course_ID, :Marks_Obtained, :Grade, :Result_Status)
+    """), data)
+
+    db.commit()
+    return {"message": "Report created successfully"}
+
+# ✏️ UPDATE REPORT
+def update_report(db, report_id, data):
+    result = db.execute(text("""
+        UPDATE Academic_Report
+        SET Marks_Obtained = :Marks_Obtained,
+            Grade = :Grade,
+            Result_Status = :Result_Status
+        WHERE Report_ID = :report_id
+    """), {**data, "report_id": report_id})
+
+    db.commit()
+
+    if result.rowcount == 0:
+        return None
+
+    return {"message": "Report updated successfully"}
+
+
+# ❌ DELETE REPORT
+def delete_report(db, report_id):
+    result = db.execute(text("""
+        DELETE FROM Academic_Report
+        WHERE Report_ID = :report_id
+    """), {"report_id": report_id})
+
+    db.commit()
+
+    if result.rowcount == 0:
+        return None
+
+    return {"message": "Report deleted successfully"}
+
+
+# 🎓 STUDENT → OWN RESULT ONLY
+def get_student_result(db, student_id):
+    result = db.execute(text("""
+        SELECT 
+            ar.Report_ID,
+            ar.Student_ID,
+            ar.Course_ID,
+            c.Course_Name,
+            ar.Marks_Obtained,
+            ar.Grade,
+            ar.Result_Status
+        FROM Academic_Report ar
+        JOIN Course c ON ar.Course_ID = c.Course_ID
+        WHERE ar.Student_ID = :student_id
+    """), {"student_id": student_id}).fetchall()
+
+    data = [dict(row._mapping) for row in result]
+    print("RESULT API DATA:", data)  # 👈 DEBUG
+    return data
+
+# 👨‍🏫 FACULTY → ALL REPORTS
+def get_all_reports(db):
+    result = db.execute(text("""
+        SELECT 
+            ar.Report_ID,
+            ar.Student_ID,
+            ar.Course_ID,
+            c.Course_Name,
+            ar.Marks_Obtained,
+            ar.Grade,
+            ar.Result_Status
+        FROM Academic_Report ar
+        JOIN Course c ON ar.Course_ID = c.Course_ID
+    """)).fetchall()
+
+    data = [dict(row._mapping) for row in result]
+    print("ALL REPORTS:", data)  # 👈 DEBUG
+    return data

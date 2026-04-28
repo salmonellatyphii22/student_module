@@ -4,11 +4,20 @@
 <title>Department Module</title>
 
 <style>
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
 body {
     font-family: Arial;
-    background: linear-gradient(135deg, #0f172a, #2563eb);
     color: white;
-    margin: 0;
+
+    /* 🔥 FIX: gradient stays fixed while scrolling */
+    background: linear-gradient(135deg, #0f172a, #2563eb);
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    background-size: cover;
 }
 
 /* 🔥 TOP SECTION */
@@ -117,6 +126,7 @@ button:hover {
             <input id="deptId" placeholder="Department ID">
             <input id="deptName" placeholder="Department Name">
             <input id="deptHead" placeholder="Head of Department">
+            <input id="deptLocation" placeholder="Department Location">
             <button onclick="addDept()">Add Department</button>
         </div>
 
@@ -136,6 +146,7 @@ button:hover {
             <input id="uid" placeholder="Department ID">
             <input id="uname" placeholder="New Department Name">
             <input id="uhead" placeholder="New Head">
+            <input id="ulocation" placeholder="New Location">
             <button onclick="updateDept()">Update</button>
         </div>
 
@@ -154,7 +165,32 @@ button:hover {
 <div class="bottom-section"></div>
 
 <script>
-// SWITCH
+const BASE_URL = "http://127.0.0.1:8000";
+
+/* ================= AUTH ================= */
+
+function getAuthHeaders() {
+    return {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + sessionStorage.getItem("token")
+    };
+}
+
+function checkAuth() {
+    if (!sessionStorage.getItem("token")) {
+        alert("Please login first");
+        window.location.href = "login.html";
+    }
+}
+
+/* ================= INIT ================= */
+
+window.onload = function () {
+    checkAuth();
+};
+
+/* ================= SWITCH ================= */
+
 function show(id) {
     document.querySelectorAll('.section').forEach(s => s.style.display = "none");
     document.getElementById(id).style.display = "block";
@@ -162,94 +198,138 @@ function show(id) {
     if (id === "view") loadDept();
 }
 
-// DATA
-function getData() {
-    return JSON.parse(localStorage.getItem("departments")) || [];
-}
+/* ================= CREATE ================= */
 
-function saveData(data) {
-    localStorage.setItem("departments", JSON.stringify(data));
-}
+async function addDept() {
+    const dept = {
+    Dept_Name: document.getElementById("deptName").value,
+    HOD_Name: document.getElementById("deptHead").value,
+    Location: document.getElementById("deptLocation").value   // ✅ NEW
+};
 
-// CREATE
-function addDept() {
-    let data = getData();
+    try {
+        const res = await fetch(`${BASE_URL}/department/`, {
+            method: "POST",
+            headers: getAuthHeaders(),
+            body: JSON.stringify(dept)
+        });
 
-    const id = document.getElementById("deptId").value;
+        if (res.status === 401) throw new Error("Unauthorized (Faculty only)");
 
-    if (data.some(d => d.id == id)) {
-        alert("Department ID already exists!");
-        return;
-    }
-
-    data.push({
-        id: id,
-        name: document.getElementById("deptName").value,
-        head: document.getElementById("deptHead").value
-    });
-
-    saveData(data);
-    alert("Department Added");
-}
-
-// VIEW
-function loadDept() {
-    let data = getData();
-
-    document.getElementById("list").innerHTML = data.map(d =>
-        `<div class="item">
-            <b>ID:</b> ${d.id}<br>
-            <b>Name:</b> ${d.name}<br>
-            <b>Head:</b> ${d.head}
-        </div>`
-    ).join("");
-}
-
-// UPDATE
-function updateDept() {
-    let data = getData();
-
-    data = data.map(d =>
-        d.id == document.getElementById("uid").value
-        ? {
-            ...d,
-            name: document.getElementById("uname").value,
-            head: document.getElementById("uhead").value
+        if (!res.ok) {
+            const err = await res.json();
+            throw new Error(err.detail || "Failed to add department");
         }
-        : d
-    );
 
-    saveData(data);
-    alert("Updated");
+        alert("Department Added");
+        loadDept();
+
+    } catch (err) {
+        alert(err.message);
+    }
 }
 
-// DELETE
-function deleteDept() {
-    let data = getData().filter(d =>
-        d.id != document.getElementById("did").value
-    );
+/* ================= VIEW ================= */
 
-    saveData(data);
-    alert("Deleted");
+async function loadDept() {
+    try {
+        const res = await fetch(`${BASE_URL}/department/`, {
+            headers: getAuthHeaders()
+        });
+
+        if (res.status === 401) throw new Error("Session expired");
+
+        const data = await res.json();
+
+        if (!data.length) {
+            document.getElementById("list").innerHTML = "<p>No departments found</p>";
+            return;
+        }
+
+        document.getElementById("list").innerHTML = data.map(d =>
+            `<div class="item department-card">
+                <b>ID:</b> ${d.Dept_ID}<br>
+                <b>Name:</b> ${d.Dept_Name}<br>
+                <b>Head:</b> ${d.HOD_Name || ""}<br>
+                <b>Location:</b> ${d.Location || ""}   <!-- ✅ NEW -->
+            </div>`
+        ).join("");
+
+    } catch (err) {
+        document.getElementById("list").innerHTML =
+            `<p style="color:red;">${err.message}</p>`;
+    }
 }
 
-// BACK
-function goBack() {
-    window.location.href = "index.html";
+/* ================= UPDATE ================= */
+
+async function updateDept() {
+    const id = document.getElementById("uid").value;
+
+    const updated = {
+        Dept_Name: document.getElementById("uname").value,
+        HOD_Name: document.getElementById("uhead").value,
+        Location: document.getElementById("ulocation").value   // ✅ NEW
+    };
+
+    try {
+        const res = await fetch(`${BASE_URL}/department/${id}`, {
+            method: "PUT",
+            headers: getAuthHeaders(),
+            body: JSON.stringify(updated)
+        });
+
+        if (res.status === 401) throw new Error("Unauthorized (Faculty only)");
+
+        if (!res.ok) throw new Error("Update failed");
+
+        alert("Updated");
+        loadDept();
+
+    } catch (err) {
+        alert(err.message);
+    }
 }
+
+/* ================= DELETE ================= */
+
+async function deleteDept() {
+    const id = document.getElementById("did").value;
+
+    try {
+        const res = await fetch(`${BASE_URL}/department/${id}`, {
+            method: "DELETE",
+            headers: getAuthHeaders()
+        });
+
+        if (res.status === 401) throw new Error("Unauthorized (Faculty only)");
+
+        if (!res.ok) throw new Error("Delete failed");
+
+        alert("Deleted");
+        loadDept();
+
+    } catch (err) {
+        alert(err.message);
+    }
+}
+
+/* ================= SEARCH ================= */
+
 function searchDepartment() {
     let input = document.getElementById("searchInput").value.toLowerCase();
     let cards = document.querySelectorAll(".department-card");
 
     cards.forEach(card => {
         let text = card.innerText.toLowerCase();
-
-        if (text.includes(input)) {
-            card.style.display = "";
-        } else {
-            card.style.display = "none";
-        }
+        card.style.display = text.includes(input) ? "" : "none";
     });
+}
+
+/* ================= BACK ================= */
+
+function goBack() {
+    window.location.href = "index.html";
 }
 </script>
 

@@ -4,11 +4,20 @@
 <title>Courses Module</title>
 
 <style>
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
 body {
     font-family: Arial;
-    background: linear-gradient(135deg, #0f172a, #2563eb);
     color: white;
-    margin: 0;
+
+    /* 🔥 FIX: gradient stays fixed while scrolling */
+    background: linear-gradient(135deg, #0f172a, #2563eb);
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    background-size: cover;
 }
 
 /* 🔥 TOP SECTION */
@@ -207,7 +216,26 @@ button:hover {
 <div class="bottom-section"></div>
 
 <script>
-// SWITCH
+const BASE_URL = "http://127.0.0.1:8000";
+
+/* ================= AUTH ================= */
+
+function getAuthHeaders() {
+    return {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + sessionStorage.getItem("token")
+    };
+}
+
+function checkAuth() {
+    if (!sessionStorage.getItem("token")) {
+        alert("Please login first");
+        window.location.href = "login.html";
+    }
+}
+
+/* ================= SWITCH ================= */
+
 function show(id) {
     document.querySelectorAll('.section').forEach(s => s.style.display = "none");
     document.getElementById(id).style.display = "block";
@@ -215,111 +243,166 @@ function show(id) {
     if (id === "view") loadCourses();
 }
 
-// DATA
-function getData() {
-    return JSON.parse(localStorage.getItem("courses")) || [];
-}
+/* ================= CREATE ================= */
 
-function saveData(data) {
-    localStorage.setItem("courses", JSON.stringify(data));
-}
+async function addCourse() {
+    const course = {
+        Course_Name: document.getElementById("courseName").value,
+        Credits: Number(document.getElementById("credits").value),
+        Course_Type: document.getElementById("courseType").value,
+        Semester: document.getElementById("semester").value 
+            ? Number(document.getElementById("semester").value) 
+            : null,
+        Faculty_ID: document.getElementById("facultyId").value 
+            ? Number(document.getElementById("facultyId").value) 
+            : null
+    };
 
-// CREATE
-function addCourse() {
-    let data = getData();
+    try {
+        const res = await fetch(`${BASE_URL}/courses/`, {
+            method: "POST",
+            headers: getAuthHeaders(),
+            body: JSON.stringify(course)
+        });
 
-    const id = document.getElementById("courseId").value;
+        const data = await res.json();
 
-    if (data.some(c => c.id == id)) {
-        alert("Course ID already exists!");
-        return;
-    }
-
-    const credits = parseInt(document.getElementById("credits").value);
-
-    // 🔥 DB constraint simulation
-    if (credits <= 0) {
-        alert("Credits must be greater than 0");
-        return;
-    }
-
-    data.push({
-        id: id,
-        name: document.getElementById("courseName").value,
-        credits: credits,
-        semester: document.getElementById("semester").value,
-        type: document.getElementById("courseType").value,
-        facultyId: document.getElementById("facultyId").value
-    });
-
-    saveData(data);
-    alert("Course Added");
-}
-
-// VIEW
-function loadCourses() {
-    let data = getData();
-
-    document.getElementById("list").innerHTML = data.map(c =>
-        `<div class="item" style="text-align:left;">
-            <p><b>ID:</b> ${c.id}</p>
-            <p><b>Name:</b> ${c.name}</p>
-            <p><b>Credits:</b> ${c.credits}</p>
-            <p><b>Semester:</b> ${c.semester}</p>
-            <p><b>Type:</b> ${c.type}</p>
-            <p><b>Faculty ID:</b> ${c.facultyId}</p>
-        </div>`
-    ).join("");
-}
-
-// UPDATE
-function updateCourse() {
-    let data = getData();
-
-    data = data.map(c =>
-        c.id == document.getElementById("uid").value
-        ? {
-            ...c,
-            name: document.getElementById("uname").value || c.name,
-            credits: document.getElementById("ucredits").value || c.credits,
-            semester: document.getElementById("usemester").value || c.semester,
-            type: document.getElementById("utype").value || c.type,
-            facultyId: document.getElementById("ufaculty").value || c.facultyId
+        if (!res.ok) {
+            alert("❌ Error: " + JSON.stringify(data.detail));
+            return;
         }
-        : c
-    );
 
-    saveData(data);
-    alert("Updated");
+        // ✅ SUCCESS MESSAGE (NOW YOU WILL SEE IT)
+        alert("✅ Course Added Successfully!");
+
+        // optional: clear form
+        document.getElementById("courseName").value = "";
+        document.getElementById("credits").value = "";
+        document.getElementById("semester").value = "";
+        document.getElementById("facultyId").value = "";
+
+        loadCourses();
+
+    } catch (err) {
+        alert("❌ Server Error: " + err.message);
+    }
 }
 
-// DELETE
-function deleteCourse() {
-    let data = getData().filter(c =>
-        c.id != document.getElementById("did").value
-    );
+/* ================= VIEW ================= */
 
-    saveData(data);
-    alert("Deleted");
+async function loadCourses() {
+    try {
+        const res = await fetch(`${BASE_URL}/courses/`, {
+            headers: getAuthHeaders()
+        });
+
+        if (!res.ok) throw new Error("Unauthorized");
+
+        const data = await res.json();
+
+        document.getElementById("list").innerHTML = data.map(c =>
+            `<div class="item course-card">
+                <p><b>ID:</b> ${c.Course_ID}</p>
+                <p><b>Name:</b> ${c.Course_Name}</p>
+                <p><b>Credits:</b> ${c.Credits}</p>
+                <p><b>Semester:</b> ${c.Semester ?? ""}</p>
+                <p><b>Type:</b> ${c.Course_Type}</p>
+                <p><b>Faculty ID:</b> ${c.Faculty_ID ?? ""}</p>
+            </div>`
+        ).join("");
+
+    } catch (err) {
+        document.getElementById("list").innerHTML =
+            `<p style="color:red;">${err.message}</p>`;
+    }
 }
 
-// BACK
-function goBack() {
-    window.location.href = "index.html";
+/* ================= UPDATE ================= */
+
+async function updateCourse() {
+    const id = document.getElementById("uid").value;
+
+    const updated = {
+        Course_Name: document.getElementById("uname").value,
+        Credits: document.getElementById("ucredits").value 
+            ? Number(document.getElementById("ucredits").value) 
+            : undefined,
+        Semester: document.getElementById("usemester").value 
+            ? Number(document.getElementById("usemester").value) 
+            : undefined,
+        Course_Type: document.getElementById("utype").value,
+        Faculty_ID: document.getElementById("ufaculty").value 
+            ? Number(document.getElementById("ufaculty").value) 
+            : undefined
+    };
+
+    try {
+        const res = await fetch(`${BASE_URL}/courses/${id}`, {
+            method: "PUT",
+            headers: getAuthHeaders(),
+            body: JSON.stringify(updated)
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            throw new Error(JSON.stringify(data.detail));
+        }
+
+        alert("Updated ✅");
+        loadCourses();
+
+    } catch (err) {
+        alert(err.message);
+    }
 }
+
+/* ================= DELETE ================= */
+
+async function deleteCourse() {
+    const id = document.getElementById("did").value;
+
+    try {
+        const res = await fetch(`${BASE_URL}/courses/${id}`, {
+            method: "DELETE",
+            headers: getAuthHeaders()
+        });
+
+        if (!res.ok) {
+            const data = await res.json();
+            throw new Error(data.detail || "Delete failed");
+        }
+
+        alert("Deleted ✅");
+        loadCourses();
+
+    } catch (err) {
+        alert(err.message);
+    }
+}
+
+/* ================= SEARCH ================= */
+
 function searchCourse() {
     let input = document.getElementById("searchInput").value.toLowerCase();
     let cards = document.querySelectorAll(".course-card");
 
     cards.forEach(card => {
         let text = card.innerText.toLowerCase();
-
-        if (text.includes(input)) {
-            card.style.display = "";
-        } else {
-            card.style.display = "none";
-        }
+        card.style.display = text.includes(input) ? "" : "none";
     });
+}
+
+/* ================= INIT ================= */
+
+window.onload = function () {
+    checkAuth();
+};
+
+/* ================= BACK ================= */
+
+function goBack() {
+    window.location.href = "index.html";
 }
 </script>
 

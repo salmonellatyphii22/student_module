@@ -5,7 +5,7 @@ from routes import student, course, subject, enrollment, marks, result
 from routes import faculty, department, exam, auth   # ✅ ADD auth
 
 from fastapi.middleware.cors import CORSMiddleware
-
+from routes import report, result
 # ==============================
 # App Initialization
 # ==============================
@@ -42,3 +42,5 @@ app.include_router(result.router)
 app.include_router(faculty.router)
 app.include_router(department.router)
 app.include_router(exam.router)
+app.include_router(report.router)
+app.include_router(result.router)

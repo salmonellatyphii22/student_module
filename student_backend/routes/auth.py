@@ -15,29 +15,30 @@ ALGORITHM = "HS256"
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-# ✅ Request schema
+# ✅ LOGIN SCHEMA
 class LoginRequest(BaseModel):
     username: str
     password: str
 
 
-# 🔐 Hash password
+# ✅ SIGNUP SCHEMA (UPDATED)
+class SignupRequest(BaseModel):
+    username: str
+    password: str
+    role: str = "Student"   # default role
+
+
+# 🔐 HASH PASSWORD
 def get_password_hash(password: str):
     return pwd_context.hash(password)
 
 
-# 🔐 Verify password (SAFE VERSION)
+# 🔐 VERIFY PASSWORD
 def verify_password(plain, hashed):
     try:
         return pwd_context.verify(plain, hashed)
     except Exception:
         return False
-
-
-# ❌ REMOVE THIS AFTER USE (IMPORTANT)
-# @router.get("/generate-hash")
-# def generate_hash():
-#     return {"hash": get_password_hash("123")}
 
 
 # ✅ LOGIN API
@@ -48,16 +49,21 @@ def login(data: LoginRequest, db: Session = Depends(get_db)):
         models.Authentication_System.Username == data.username
     ).first()
 
-    # ✅ Better validation
     if user is None:
         raise HTTPException(status_code=401, detail="Invalid username")
 
     if not verify_password(data.password, user.Password):
         raise HTTPException(status_code=401, detail="Invalid password")
 
-    # 🎟️ Create JWT token
+    # ✅ Ensure valid user_id (NO NULL EVER)
+    user_id = user.User_ID if user.User_ID else user.Login_ID
+
+    if not user_id:
+        raise HTTPException(status_code=500, detail="User ID missing in database")
+
+    # ✅ Create JWT payload
     payload = {
-        "user_id": user.User_ID,
+        "user_id": int(user_id),   # force integer
         "role": user.Role,
         "exp": datetime.utcnow() + timedelta(hours=2)
     }
@@ -67,16 +73,15 @@ def login(data: LoginRequest, db: Session = Depends(get_db)):
     return {
         "access_token": token,
         "token_type": "bearer",
-        "role": user.Role
+        "role": user.Role,
+        "user_id": int(user_id)   # optional but useful for frontend
     }
-    
-# -------------------------
-# SIGNUP API (ADD HERE)
-# -------------------------
-@router.post("/signup")
-def signup(data: LoginRequest, db: Session = Depends(get_db)):
 
-    # 🔍 Check if user already exists
+
+# ✅ SIGNUP API
+@router.post("/signup")
+def signup(data: SignupRequest, db: Session = Depends(get_db)):
+
     existing_user = db.query(models.Authentication_System).filter(
         models.Authentication_System.Username == data.username
     ).first()
@@ -84,18 +89,22 @@ def signup(data: LoginRequest, db: Session = Depends(get_db)):
     if existing_user:
         raise HTTPException(status_code=400, detail="Username already exists")
 
-    # 🔐 Hash password
     hashed_password = get_password_hash(data.password)
 
-    # ✅ Create new user
+    # Step 1: create user WITHOUT User_ID
     new_user = models.Authentication_System(
         Username=data.username,
         Password=hashed_password,
-        Role="Student",
-        User_ID=1
+        Role=data.role,
     )
 
     db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    # Step 2: assign User_ID = Login_ID ✅
+    new_user.User_ID = new_user.Login_ID
+
     db.commit()
     db.refresh(new_user)
 

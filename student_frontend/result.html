@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Student Result</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background: #f4f7fb;
+}
+
+/* Navbar */
+.navbar {
+    background: #0f4c81;
+    color: white;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.navbar h2 {
+    margin: 0;
+}
+
+.logout-btn {
+    padding: 8px 15px;
+    border: none;
+    background: red;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+/* Container */
+.container {
+    padding: 20px;
+}
+
+/* Table */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background: white;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+th, td {
+    padding: 12px;
+    border-bottom: 1px solid #ddd;
+    text-align: center;
+}
+
+th {
+    background: #0f4c81;
+    color: white;
+}
+
+tr:hover {
+    background: #f1f1f1;
+}
+
+/* Message */
+.message {
+    margin-top: 20px;
+    font-size: 16px;
+    text-align: center;
+}
+
+.error {
+    color: red;
+}
+</style>
+</head>
+
+<body>
+
+<div class="navbar">
+    <h2>Student Result</h2>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+</div>
+
+<div class="container">
+
+    <h3>Your Academic Report</h3>
+
+    <div id="msg" class="message"></div>
+
+    <table id="resultTable" style="display:none;">
+        <thead>
+            <tr>
+                <th>Report ID</th>
+                <th>Student ID</th>
+                <th>Course ID</th>
+                <th>Course</th>
+                <th>Marks</th>
+                <th>Grade</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+    </table>
+
+</div>
+
+<script>
+const BASE_URL = "http://127.0.0.1:8000";
+
+// 🔐 Check login
+const token = sessionStorage.getItem("token");
+
+if (!token) {
+    window.location.href = "login.html";
+}
+
+// 🔐 Fetch result
+async function loadResult() {
+    const msg = document.getElementById("msg");
+    const table = document.getElementById("resultTable");
+    const tbody = document.getElementById("tableBody");
+
+    try {
+        const res = await fetch(`${BASE_URL}/result/`, {
+            headers: {
+                "Authorization": "Bearer " + token
+            }
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            throw new Error(data.detail || "Failed to fetch result");
+        }
+
+        tbody.innerHTML = "";
+
+        if (!data.length) {
+            msg.innerText = "No results available";
+            table.style.display = "none";
+            return;
+        }
+
+        msg.innerText = "";
+        table.style.display = "table";
+
+        data.forEach(row => {
+            const tr = document.createElement("tr");
+
+            tr.innerHTML = `
+                <td>${row.Report_ID}</td>
+                <td>${row.Student_ID}</td>
+                <td>${row.Course_ID}</td>
+                <td>${row.Course_Name}</td>
+                <td>${row.Marks_Obtained}</td>
+                <td>${row.Grade}</td>
+                <td>${row.Result_Status}</td>
+            `;
+
+            tbody.appendChild(tr);
+        });
+
+    } catch (err) {
+        msg.innerText = err.message;
+        msg.className = "message error";
+    }
+}
+
+// 🔐 Logout
+function logout() {
+    sessionStorage.removeItem("token");
+    window.location.href = "login.html";
+}
+
+// 🚀 Load
+loadResult();
+</script>
+
+</body>
+</html>

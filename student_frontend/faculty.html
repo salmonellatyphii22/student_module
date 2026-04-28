@@ -4,11 +4,20 @@
 <title>Faculty Module</title>
 
 <style>
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
 body {
     font-family: Arial;
-    background: linear-gradient(135deg, #0f172a, #2563eb);
     color: white;
-    margin: 0;
+
+    /* 🔥 FIX: gradient stays fixed while scrolling */
+    background: linear-gradient(135deg, #0f172a, #2563eb);
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    background-size: cover;
 }
 
 /* 🔥 TOP SECTION */
@@ -170,7 +179,26 @@ button:hover {
 <div class="bottom-section"></div>
 
 <script>
-// SWITCH
+const BASE_URL = "http://127.0.0.1:8000";
+
+/* ================= AUTH ================= */
+
+function getAuthHeaders() {
+    return {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + sessionStorage.getItem("token")
+    };
+}
+
+function checkAuth() {
+    if (!sessionStorage.getItem("token")) {
+        alert("Please login first");
+        window.location.href = "login.html";
+    }
+}
+
+/* ================= SWITCH ================= */
+
 function show(id) {
     document.querySelectorAll('.section').forEach(s => s.style.display = "none");
     document.getElementById(id).style.display = "block";
@@ -178,93 +206,134 @@ function show(id) {
     if (id === "view") loadFaculty();
 }
 
-// DATA
-function getData() {
-    return JSON.parse(localStorage.getItem("faculty")) || [];
-}
+/* ================= CREATE ================= */
 
-function saveData(data) {
-    localStorage.setItem("faculty", JSON.stringify(data));
-}
+async function addFaculty() {
+    const faculty = {
+        Name: document.getElementById("facultyName").value,
+        Email: document.getElementById("facultyEmail").value,
+        Phone_no: document.getElementById("facultyPhone").value,
+        Designation: document.getElementById("facultyDesignation").value,
+        Salary: Number(document.getElementById("facultySalary").value),
+        Dept_ID: Number(document.getElementById("facultyDept").value)
+    };
 
-// CREATE
-function addFaculty() {
-    let data = getData();
+    try {
+        const res = await fetch(`${BASE_URL}/faculty/`, {
+            method: "POST",
+            headers: getAuthHeaders(),
+            body: JSON.stringify(faculty)
+        });
 
-    const id = document.getElementById("facultyId").value;
+        const data = await res.json();
 
-    if (data.some(f => f.id == id)) {
-        alert("Faculty ID already exists!");
-        return;
-    }
-
-    data.push({
-        id: id,
-        name: document.getElementById("facultyName").value,
-        email: document.getElementById("facultyEmail").value,
-        phone: document.getElementById("facultyPhone").value,
-        designation: document.getElementById("facultyDesignation").value,
-        salary: document.getElementById("facultySalary").value,
-        deptId: document.getElementById("facultyDept").value
-    });
-
-    saveData(data);
-    alert("Faculty Added");
-}
-
-// VIEW
-function loadFaculty() {
-    let data = getData();
-
-    document.getElementById("list").innerHTML = data.map(f =>
-        `<div class="item" style="text-align:left;">
-            <p><b>ID:</b> ${f.id}</p>
-            <p><b>Name:</b> ${f.name}</p>
-            <p><b>Email:</b> ${f.email}</p>
-            <p><b>Phone:</b> ${f.phone}</p>
-            <p><b>Designation:</b> ${f.designation}</p>
-            <p><b>Salary:</b> ${f.salary}</p>
-            <p><b>Dept ID:</b> ${f.deptId}</p>
-        </div>`
-    ).join("");
-}
-
-// UPDATE
-function updateFaculty() {
-    let data = getData();
-
-    data = data.map(f =>
-        f.id == document.getElementById("uid").value
-        ? {
-            ...f,
-            name: document.getElementById("uname").value || f.name,
-            email: document.getElementById("uemail").value || f.email,
-            phone: document.getElementById("uphone").value || f.phone,
-            designation: document.getElementById("udesignation").value || f.designation,
-            salary: document.getElementById("usalary").value || f.salary,
-            deptId: document.getElementById("udept").value || f.deptId
+        if (!res.ok) {
+            throw new Error(JSON.stringify(data.detail));
         }
-        : f
-    );
 
-    saveData(data);
-    alert("Updated");
+        alert("Faculty Added ✅");
+        loadFaculty();
+
+    } catch (err) {
+        alert(err.message);
+    }
 }
 
-// DELETE
-function deleteFaculty() {
-    let data = getData().filter(f =>
-        f.id != document.getElementById("did").value
-    );
+/* ================= VIEW ================= */
 
-    saveData(data);
-    alert("Deleted");
+async function loadFaculty() {
+    try {
+        const res = await fetch(`${BASE_URL}/faculty/`, {
+            headers: getAuthHeaders()
+        });
+
+        if (!res.ok) throw new Error("Unauthorized");
+
+        const data = await res.json();
+
+        document.getElementById("list").innerHTML = data.map(f =>
+            `<div class="item faculty-card" style="text-align:left;">
+                <p><b>ID:</b> ${f.Faculty_ID}</p>
+                <p><b>Name:</b> ${f.Name}</p>   <!-- ✅ FIX -->
+                <p><b>Email:</b> ${f.Email}</p>
+                <p><b>Phone:</b> ${f.Phone_no || ""}</p>
+                <p><b>Designation:</b> ${f.Designation || ""}</p>
+                <p><b>Salary:</b> ${f.Salary ?? ""}</p>
+                <p><b>Dept ID:</b> ${f.Dept_ID}</p>
+            </div>`
+        ).join("");
+
+    } catch (err) {
+        document.getElementById("list").innerHTML =
+            `<p style="color:red;">${err.message}</p>`;
+    }
 }
 
-// BACK
-function goBack() {
-    window.location.href = "index.html";
+/* ================= UPDATE ================= */
+
+async function updateFaculty() {
+    const id = document.getElementById("uid").value;
+
+    const updated = {
+        Name: document.getElementById("uname").value,   // ✅ FIX
+        Email: document.getElementById("uemail").value,
+        Phone_no: document.getElementById("uphone").value,
+        Designation: document.getElementById("udesignation").value,
+        Salary: document.getElementById("usalary").value 
+            ? Number(document.getElementById("usalary").value) 
+            : null,
+        Dept_ID: document.getElementById("udept").value 
+            ? Number(document.getElementById("udept").value) 
+            : null
+    };
+
+    try {
+        const res = await fetch(`${BASE_URL}/faculty/${id}`, {
+            method: "PUT",
+            headers: getAuthHeaders(),
+            body: JSON.stringify(updated)
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            throw new Error(JSON.stringify(data.detail));
+        }
+
+        alert("Updated ✅");
+        loadFaculty();
+
+    } catch (err) {
+        alert(err.message);
+    }
 }
+
+/* ================= DELETE ================= */
+
+async function deleteFaculty() {
+    const id = document.getElementById("did").value;
+
+    try {
+        const res = await fetch(`${BASE_URL}/faculty/${id}`, {
+            method: "DELETE",
+            headers: getAuthHeaders()
+        });
+
+        if (!res.ok) {
+            const data = await res.json();
+            throw new Error(data.detail || "Delete failed");
+        }
+
+        alert("Deleted ✅");
+        loadFaculty();
+
+    } catch (err) {
+        alert(err.message);
+    }
+}
+
+/* ================= SEARCH ================= */
+
 function searchFaculty() {
     let input = document.getElementById("searchInput").value.toLowerCase();
     let cards = document.querySelectorAll(".faculty-card");
@@ -272,13 +341,21 @@ function searchFaculty() {
     cards.forEach(card => {
         let text = card.innerText.toLowerCase();
 
-        if (text.includes(input)) {
-            card.style.display = "";
-        } else {
-            card.style.display = "none";
-        }
+        card.style.display = text.includes(input) ? "" : "none";
     });
 }
+
+/* ================= BACK ================= */
+
+function goBack() {
+    window.location.href = "index.html";
+}
+
+/* ================= INIT ================= */
+
+window.onload = function () {
+    checkAuth();
+};
 </script>
 
 </body>

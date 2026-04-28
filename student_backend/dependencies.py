@@ -1,4 +1,4 @@
-from fastapi import Depends, HTTPException
+from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import jwt, JWTError
 
@@ -6,35 +6,63 @@ from jose import jwt, JWTError
 SECRET_KEY = "supersecretkey"
 ALGORITHM = "HS256"
 
-# 🔐 This enables Authorization: Bearer <token>
 security = HTTPBearer()
 
 
-# ✅ Get current logged-in user from token
-def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+# ✅ Get current logged-in user
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from jose import jwt, JWTError
+
+security = HTTPBearer()
+
+SECRET_KEY = "supersecretkey"
+ALGORITHM = "HS256"
+
+
+def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
     token = credentials.credentials
 
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        return payload   # contains user_id + role
+
+        user_id = payload.get("user_id")
+        role = payload.get("role")
+
+        # ✅ STRICT VALIDATION
+        if not user_id or not role:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token data"
+            )
+
+        # ✅ RETURN CLEAN STRUCTURE
+        return {
+            "user_id": int(user_id),   # ensure int
+            "role": role
+        }
+
     except JWTError:
-        raise HTTPException(status_code=401, detail="Invalid or expired token")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token"
+        )
 
 
 # 🔒 Only Faculty/Admin can modify
-def require_faculty(user=Depends(get_current_user)):
-    if user["role"] not in ["Faculty", "Admin"]:
-        raise HTTPException(status_code=403, detail="Only faculty/admin allowed")
-    return user
-
-
-# 👁️ Any logged-in user can view
-def allow_view(user=Depends(get_current_user)):
-    return user
-
-
-# ❌ Optional: only student endpoints
 def require_student(user=Depends(get_current_user)):
-    if user["role"] != "Student":
-        raise HTTPException(status_code=403, detail="Only students allowed")
+    print("USER DEBUG:", user)
+
+
+def require_faculty(user = Depends(get_current_user)):
+    if user["role"] not in ["Faculty", "Admin"]:
+        raise HTTPException(status_code=403, detail="Faculty/Admin only")
+    return user
+
+
+def allow_view(user = Depends(get_current_user)):
+    if user["role"] not in ["Student", "Faculty", "Admin"]:
+        raise HTTPException(status_code=403)
     return user

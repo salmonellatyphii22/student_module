@@ -48,7 +48,7 @@ class CourseBase(BaseModel):
 
 
 class CourseCreate(CourseBase):
-    Course_ID: int   # only if manually provided
+    pass   # only if manually provided
 
 
 class CourseUpdate(BaseModel):
@@ -59,6 +59,12 @@ class CourseUpdate(BaseModel):
     Faculty_ID: Optional[int] = None
 
 
+class CourseCreate(CourseBase):
+    pass
+
+    class Config:
+        from_attributes = True
+        
 class CourseResponse(CourseBase):
     Course_ID: int
 
@@ -177,6 +183,52 @@ class ExamUpdate(BaseModel):
 
 class ExamResponse(ExamBase):
     Exam_ID: int
+
+    class Config:
+        from_attributes = True
+        
+# ---------------- ACADEMIC REPORT ----------------
+
+class ReportBase(BaseModel):
+    Student_ID: int
+    Course_ID: int
+    Marks_Obtained: float
+    Grade: str
+    Result_Status: str
+
+
+# ➕ CREATE (Faculty/Admin)
+class ReportCreate(ReportBase):
+    pass
+
+
+# ✏️ UPDATE (Faculty/Admin)
+class ReportUpdate(BaseModel):
+    Marks_Obtained: Optional[float] = None
+    Grade: Optional[str] = None
+    Result_Status: Optional[str] = None
+
+
+# 📊 RESPONSE (Student + Faculty View)
+class ReportResponse(BaseModel):
+    Report_ID: int
+    Student_ID: int
+    Course_ID: int
+    Course_Name: str
+    Marks_Obtained: float
+    Grade: str
+    Result_Status: str
+
+    class Config:
+        from_attributes = True
+        
+class ReportResponseFull(BaseModel):
+    Report_ID: int
+    Student_ID: int
+    Course_ID: int
+    Marks_Obtained: float
+    Grade: str
+    Result_Status: str
 
     class Config:
         from_attributes = True

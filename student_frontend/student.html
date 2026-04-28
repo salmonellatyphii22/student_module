@@ -4,11 +4,20 @@
 <title>Student Module</title>
 
 <style>
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
 body {
     font-family: Arial;
-    background: linear-gradient(135deg, #0f172a, #2563eb);
     color: white;
-    margin: 0;
+
+    /* 🔥 FIXED GRADIENT ISSUE */
+    background: linear-gradient(135deg, #0f172a, #2563eb);
+    background-attachment: fixed;   /* ⭐ key fix */
+    background-repeat: no-repeat;
+    background-size: cover;
 }
 
 /* 🔥 TOP SECTION ONLY */
@@ -206,6 +215,17 @@ input[type="date"] {
 </div>
 
 <script>
+const BASE_URL = "http://127.0.0.1:8000";
+
+/* ================= AUTH HEADER ================= */
+function getHeaders() {
+    return {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + sessionStorage.getItem("token")
+    };
+}
+
+/* ================= UI ================= */
 function show(id) {
     document.querySelectorAll('.section').forEach(s => s.style.display = "none");
     document.getElementById(id).style.display = "block";
@@ -213,107 +233,144 @@ function show(id) {
     if (id === "view") loadStudents();
 }
 
-function getData() {
-    return JSON.parse(localStorage.getItem("students")) || [];
-}
+/* ================= CREATE ================= */
+async function addStudent() {
+    const student = {
+        FirstName: document.getElementById("fname").value,
+        LastName: document.getElementById("lname").value,
+        Email: document.getElementById("email").value,
+        Phone_no: document.getElementById("phone").value,
+        Address: document.getElementById("address").value,
+        Date_of_Birth: document.getElementById("dob").value,
+        EnrollmentYear: parseInt(document.getElementById("year").value),
+        Dept_ID: parseInt(document.getElementById("dept").value)
+    };
 
-function saveData(data) {
-    localStorage.setItem("students", JSON.stringify(data));
-}
+    try {
+        const res = await fetch(`${BASE_URL}/students/`, {
+            method: "POST",
+            headers: getHeaders(),
+            body: JSON.stringify(student)
+        });
 
-function addStudent() {
-    let data = getData();
+        const data = await res.json();
 
-    const id = document.getElementById("sid").value;
+        if (!res.ok) throw new Error(data.detail);
 
-    // Primary Key check
-    if (data.some(s => s.id == id)) {
-        alert("Student ID already exists!");
-        return;
+        alert("Student Added Successfully");
+        loadStudents();
+
+    } catch (err) {
+        alert(err.message);
     }
-
-    data.push({
-        id: id,
-        firstName: document.getElementById("fname").value,
-        lastName: document.getElementById("lname").value,
-        email: document.getElementById("email").value,
-        phone: document.getElementById("phone").value,
-        address: document.getElementById("address").value,
-        dob: document.getElementById("dob").value,
-        enrollmentYear: document.getElementById("year").value,
-        deptId: document.getElementById("dept").value
-    });
-
-    saveData(data);
-    alert("Student Added");
 }
 
-function loadStudents() {
-    let data = getData();
+/* ================= VIEW ================= */
+async function loadStudents() {
+    try {
+        const res = await fetch(`${BASE_URL}/students/`, {
+            headers: getHeaders()
+        });
 
-    document.getElementById("list").innerHTML = data.map(s =>
-        `<div class="student-card">
-            <p><b>ID:</b> ${s.id}</p>
-            <p><b>Name:</b> ${s.firstName || ""} ${s.lastName || ""}</p>
-            <p><b>Email:</b> ${s.email || ""}</p>
-            <p><b>Phone:</b> ${s.phone || ""}</p>
-            <p><b>DOB:</b> ${s.dob || ""}</p>
-            <p><b>Year:</b> ${s.enrollmentYear || ""}</p>
-            <p><b>Dept ID:</b> ${s.deptId || ""}</p>
-        </div>`
-    ).join("");
+        console.log("STATUS:", res.status); // debug
+
+        if (!res.ok) {
+            const err = await res.text();
+            document.getElementById("list").innerHTML =
+                `<p style="color:red;">${err}</p>`;
+            return;
+        }
+
+        const data = await res.json();
+
+        document.getElementById("list").innerHTML = data.map(s =>
+            `<div class="student-card">
+                <p><b>ID:</b> ${s.Student_ID}</p>
+                <p><b>Name:</b> ${s.FirstName} ${s.LastName}</p>
+                <p><b>Email:</b> ${s.Email}</p>
+                <p><b>Phone:</b> ${s.Phone_no}</p>
+                <p><b>DOB:</b> ${s.Date_of_Birth}</p>
+                <p><b>Year:</b> ${s.EnrollmentYear}</p>
+                <p><b>Dept ID:</b> ${s.Dept_ID}</p>
+            </div>`
+        ).join("");
+
+    } catch (err) {
+        console.error(err);
+    }
 }
 
-function updateStudent() {
-    let data = getData();
-
+/* ================= UPDATE ================= */
+async function updateStudent() {
     const id = document.getElementById("uid").value;
 
-    data = data.map(s =>
-        s.id == id
-        ? {
-            ...s,
-            firstName: document.getElementById("ufname").value || s.firstName,
-            lastName: document.getElementById("ulname").value || s.lastName,
-            email: document.getElementById("uemail").value || s.email,
-            phone: document.getElementById("uphone").value || s.phone,
-            address: document.getElementById("uaddress").value || s.address,
-            dob: document.getElementById("udob").value || s.dob,
-            enrollmentYear: document.getElementById("uyear").value || s.enrollmentYear,
-            deptId: document.getElementById("udept").value || s.deptId
+    const data = {
+        FirstName: document.getElementById("ufname").value,
+        LastName: document.getElementById("ulname").value,
+        Email: document.getElementById("uemail").value,
+        Phone_no: document.getElementById("uphone").value,
+        Address: document.getElementById("uaddress").value,
+        Date_of_Birth: document.getElementById("udob").value,
+        EnrollmentYear: document.getElementById("uyear").value,
+        Dept_ID: document.getElementById("udept").value
+    };
+
+    try {
+        const res = await fetch(`${BASE_URL}/students/${id}`, {
+            method: "PUT",
+            headers: getHeaders(),
+            body: JSON.stringify(data)
+        });
+
+        const result = await res.json();
+
+        if (!res.ok) throw new Error(result.detail);
+
+        alert("Student Updated");
+        loadStudents();
+
+    } catch (err) {
+        alert(err.message);
+    }
+}
+
+/* ================= DELETE ================= */
+async function deleteStudent() {
+    const id = document.getElementById("did").value;
+
+    try {
+        const res = await fetch(`${BASE_URL}/students/${id}`, {
+            method: "DELETE",
+            headers: getHeaders()
+        });
+
+        if (!res.ok) {
+            const err = await res.json();
+            throw new Error(err.detail);
         }
-        : s
-    );
 
-    saveData(data);
-    alert("Student Updated");
+        alert("Deleted Successfully");
+        loadStudents();
+
+    } catch (err) {
+        alert(err.message);
+    }
 }
 
-function deleteStudent() {
-    let data = getData().filter(s => 
-        s.id != document.getElementById("did").value
-    );
-
-    saveData(data);
-    alert("Deleted");
-}
-
-function goBack() {
-    window.location.href = "index.html";
-}
+/* ================= SEARCH ================= */
 function searchStudents() {
     let input = document.getElementById("searchInput").value.toLowerCase();
     let cards = document.querySelectorAll(".student-card");
 
     cards.forEach(card => {
         let text = card.innerText.toLowerCase();
-
-        if (text.includes(input)) {
-            card.style.display = "";
-        } else {
-            card.style.display = "none";
-        }
+        card.style.display = text.includes(input) ? "" : "none";
     });
+}
+
+/* ================= BACK ================= */
+function goBack() {
+    window.location.href = "index.html";
 }
 </script>
 

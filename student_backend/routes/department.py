@@ -5,7 +5,7 @@ from database import get_db
 from typing import List
 from dependencies import require_faculty, allow_view
 
-router = APIRouter(prefix="/departments", tags=["Departments"])
+router = APIRouter(prefix="/department", tags=["Department"])
 
 
 # ❌ CREATE → ONLY FACULTY
