@@ -138,3 +138,16 @@ class Authentication_System(Base):
     Password = Column(String(255), nullable=False)  # store HASHED password
     Role = Column(String(20), nullable=False)       # Student / Faculty / Admin
     User_ID = Column(Integer, nullable=False)       # FK to Student_ID or Faculty_ID
+    
+class AcademicReport(Base):
+    __tablename__ = "Academic_Report"
+
+    Report_ID = Column(Integer, primary_key=True)
+    Student_ID = Column(Integer)
+    Course_ID = Column(Integer, ForeignKey("Course.Course_ID"))
+
+    Marks_Obtained = Column(Float)
+    Grade = Column(String(2))
+    Result_Status = Column(String(10))
+
+    course = relationship("Course")

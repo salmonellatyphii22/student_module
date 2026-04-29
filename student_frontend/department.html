@@ -115,10 +115,10 @@ button:hover {
         <h1>Department Module</h1>
 
         <div class="box">
-            <button onclick="show('create')">Create</button>
-            <button onclick="show('view')">View</button>
-            <button onclick="show('update')">Update</button>
-            <button onclick="show('delete')">Delete</button>
+            <button id="createBtn" onclick="show('create')">Create</button>
+            <button id="viewBtn" onclick="show('view')">View</button>
+            <button id="updateBtn" onclick="show('update')">Update</button>
+            <button id="deleteBtn" onclick="show('delete')">Delete</button>
         </div>
 
         <!-- CREATE -->
@@ -187,6 +187,7 @@ function checkAuth() {
 
 window.onload = function () {
     checkAuth();
+    applyRoleAccess();
 };
 
 /* ================= SWITCH ================= */
@@ -324,6 +325,18 @@ function searchDepartment() {
         let text = card.innerText.toLowerCase();
         card.style.display = text.includes(input) ? "" : "none";
     });
+}
+
+function applyRoleAccess() {
+    const role = sessionStorage.getItem("role")?.toLowerCase();
+
+    console.log("ROLE:", role); // debug
+
+    if (role !== "faculty") {
+        document.getElementById("createBtn").style.display = "none";
+        document.getElementById("updateBtn").style.display = "none";
+        document.getElementById("deleteBtn").style.display = "none";
+    }
 }
 
 /* ================= BACK ================= */
